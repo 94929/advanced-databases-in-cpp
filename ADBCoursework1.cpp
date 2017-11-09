@@ -16,8 +16,18 @@ using std::to_string;
 std::vector<std::string> findHours(odb::database& db, std::string username) {
 	std::vector<std::string> result;
 	transaction t(db.begin());
-	// Your implementation goes here:
-	// Find the hours
+
+    auto users = db.query<user>(odb::query<user>::name == username);
+
+    for (auto& user : users)
+        for (auto& userReview : user.reviews) {
+            auto businessId = userReview->business_id;
+            auto businessHours = businessId->business_hours;
+
+            for (auto& businessHour : businessHours)
+                result.push_back(businessHour->hours);
+        }
+
 	t.commit();
 	return result;
 }
