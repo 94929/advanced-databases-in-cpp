@@ -60,21 +60,23 @@ std::vector<StarCount> countStars(odb::database& db, float latMin, float latMax,
 	odb::result<StarCount> queryResult (db.query<StarCount>(starQuery));
 	for (auto& eachStarCount : queryResult)
 		result.push_back(eachStarCount);
-		
+
 	t.commit();
 	return result;
 }
 
 void createIndex(odb::database& db){
-	// Your implementation goes here:
-	// don't forget to wrap it in a transaction
-	// create a columnstore index to accelerate your query
+	std::string createIndexQuery;
+	createIndexQuery.append("CREATE NONCLUSTERED COLUMNSTORE INDEX ");
+	db.execute(createIndexQuery + "businessDSM ON business(id, latitude, longitude);");
+	db.execute(createIndexQuery + "reviewDSM ON review(business_id, stars);");
 }
 
 void dropIndex(odb::database& db){
-	// Your implementation goes here:
-	// don't forget to wrap it in a transaction
-	// drop the columnstore index you've created
+	std::string dropIndexQuery;
+	dropIndexQuery.append("DROP INDEX ");
+	db.execute(dropIndexQuery + "businessDSM ON business;");
+	db.execute(dropIndexQuery + "reviewDSM ON review;");
 }
 
 // ---------------------------------------------
