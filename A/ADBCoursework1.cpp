@@ -17,16 +17,16 @@ std::vector<std::string> findHours(odb::database& db, std::string username) {
 	std::vector<std::string> result;
 	transaction t(db.begin());
 
-    auto users = db.query<user>(odb::query<user>::name == username);
+	auto users = db.query<user>(odb::query<user>::name == username);
 
-    for (auto& user : users)
-        for (auto& userReview : user.reviews) {
-            auto businessId = userReview->business_id;
-            auto businessHours = businessId->business_hours;
+	for (auto& user : users) 
+		for (auto& userReview : user.reviews) {
+			auto businessId = userReview->business_id;
+			auto businessHours = businessId->business_hours;
 
-            for (auto& businessHour : businessHours)
-                result.push_back(businessHour->hours);
-        }
+			for (auto& businessHour : businessHours)
+				result.push_back(businessHour->hours);
+		}
 
 	t.commit();
 	return result;
@@ -66,17 +66,31 @@ std::vector<StarCount> countStars(odb::database& db, float latMin, float latMax,
 }
 
 void createIndex(odb::database& db){
+	transaction t(db.begin());
+
+	/** ADD NON-CLUSTERED INDEX,
+		CREATE "NONCLUSTERED COLUMNSTORE"INDEX index_name ON table_name(column_names);
+	*/
 	std::string createIndexQuery;
 	createIndexQuery.append("CREATE NONCLUSTERED COLUMNSTORE INDEX ");
 	db.execute(createIndexQuery + "businessDSM ON business(id, latitude, longitude);");
 	db.execute(createIndexQuery + "reviewDSM ON review(business_id, stars);");
+	
+	t.commit();
 }
 
 void dropIndex(odb::database& db){
+	transaction t(db.begin());
+
+	/** DROP ALL NON-CLUSTERED INDEXES,
+		DROP INDEX index_name ON table_name(column_names);
+	*/
 	std::string dropIndexQuery;
 	dropIndexQuery.append("DROP INDEX ");
 	db.execute(dropIndexQuery + "businessDSM ON business;");
 	db.execute(dropIndexQuery + "reviewDSM ON review;");
+
+	t.commit();
 }
 
 // ---------------------------------------------
@@ -164,7 +178,7 @@ int main(int argc, char** argv) {
 	}
 
 	{ // performance runs
-
+		
 		// warmup run
 		countStars(db, 30.0, 45.7, -100.0, -1.0);
 		for(size_t i = 0; i < 5; i++) {

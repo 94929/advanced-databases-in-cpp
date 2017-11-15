@@ -18,11 +18,17 @@ public:
 	long elapsed_time;
 };
 
+// ---------------------------------------------
+// No need to change anything above this line
+// ---------------------------------------------
+
+// Class declarations
 class business;
 class hours;
 class review;
 class user;
 
+// Class implementations
 #pragma db object
 class business {
 public:
@@ -40,8 +46,14 @@ public:
 	float stars;
 	int review_count;
 	int is_open;
- 	
-    #pragma db value_not_null inverse(business_id)
+
+	// ONE TO MANY RELATION
+	//std::set<review*> reviews;	
+
+	// MANY TO MANY RELATIONS BETWEEN BUSINESS AND ?
+	// CEATE SETS ON BOTH SIDES
+
+	#pragma db value_not_null inverse(business_id)
 	std::set<std::shared_ptr<hours>> business_hours;
 };
 
@@ -52,6 +64,7 @@ public:
 	int id;
 
 	std::string hours;
+	//std::string business_id;
 	
 	#pragma db not_null
 	odb::lazy_weak_ptr<business> business_id;
@@ -69,6 +82,9 @@ public:
 	int useful;
 	int funny;
 	int cool;
+
+	// std::string business_id;
+	// std::string user_id;
 
 	#pragma db not_null
 	std::shared_ptr<business> business_id;
@@ -103,6 +119,7 @@ public:
 	int compliment_writer;
 	int compliment_photos;
 
+	// ONE TO MANY RELATION
 	#pragma db inverse(user_id)
 	std::set<std::shared_ptr<review>> reviews;
 }; 
