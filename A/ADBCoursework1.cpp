@@ -36,9 +36,31 @@ std::vector<StarCount> countStars(odb::database& db, float latMin, float latMax,
 																	float longMax) {
 	std::vector<StarCount> result;
 	transaction t(db.begin());
-	// Your implementation goes here:
-	// db.query<StarCount>("select ...")
-	// Count the stars
+
+	std::string starQuery;
+	starQuery.append("SELECT review.stars, COUNT(review.stars) ");
+	starQuery.append("FROM review ");
+	starQuery.append("JOIN business ");
+	starQuery.append("ON review.business_id = business.id ");
+	starQuery.append("WHERE ");
+	starQuery.append("(business.latitude ");
+	starQuery.append("BETWEEN ");
+	starQuery.append(std::to_string(latMin));
+	starQuery.append(" AND ");
+	starQuery.append(std::to_string(latMax));
+	starQuery.append(") AND (");
+	starQuery.append("business.longitude ");
+	starQuery.append("BETWEEN ");
+	starQuery.append(std::to_string(longMin));
+	starQuery.append(" AND ");
+	starQuery.append(std::to_string(longMax));
+	starQuery.append(")");
+	starQuery.append(" GROUP BY review.stars;");
+
+	odb::result<StarCount> queryResult (db.query<StarCount>(starQuery));
+	for (auto& eachStarCount : queryResult)
+		result.push_back(eachStarCount);
+		
 	t.commit();
 	return result;
 }
@@ -140,7 +162,7 @@ int main(int argc, char** argv) {
 	}
 
 	{ // performance runs
-		
+
 		// warmup run
 		countStars(db, 30.0, 45.7, -100.0, -1.0);
 		for(size_t i = 0; i < 5; i++) {
